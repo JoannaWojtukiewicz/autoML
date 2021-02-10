@@ -1,0 +1,58 @@
+---
+title: "Joanna Wojtukiewicz AutoML"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+
+## Libraries 
+
+```{r}
+library(h2o)
+library(mlbench)
+
+h2o.init(nthreads = -1, max_mem_size = '4G')
+
+```
+
+## Data loading
+
+```{r echo=FALSE}
+data(Sonar)
+```
+```{r}
+
+sonar.data = Sonar
+sonar.hex = as.h2o(sonar.data, destination_frame = 'sonar.hex')
+sonar.split <- h2o.splitFrame(data = sonar.hex,
+                             ratios = 0.8)
+sonar.train <- sonar.split[[1]]
+sonar.test <- sonar.split[[2]]
+y = 'Class'
+x = setdiff(names(sonar.train), y)
+```
+
+## Model construct
+
+```{r}
+sonar.automl <- h2o.automl(y = y, 
+                           x = x, 
+                           training_frame = sonar.train,
+                           validation_frame = sonar.test,
+                           nfolds = 0,
+                           max_runtime_secs = 300)
+```
+
+## Model test
+
+```{r}
+sonar.automl@leader 
+as.data.frame(sonar.automl@leaderboard)
+
+automl.predict = h2o.predict(object = sonar.automl,
+                             newdata = sonar.hex)
+automl.predict
+```
+
+
